@@ -1,10 +1,13 @@
 import type { SxProps, Theme } from '@mui/material/styles';
 
 export const cardStyles: SxProps<Theme> = {
-  minWidth: 275,
-  mb: 2, // Додаємо відступ знизу для карток
-  boxShadow: 3, // Додаємо тінь
-  borderRadius: 2, // Закруглені кути
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  boxShadow: 3,
+  borderRadius: 2,
+  overflow: 'hidden',
 };
 
 export const cardHeaderStyles: SxProps<Theme> = {
@@ -14,12 +17,14 @@ export const cardHeaderStyles: SxProps<Theme> = {
   mb: 1.5,
 };
 
-export const idChipStyles: SxProps<Theme> = {
-  // Стилі для чіпа ID
+export const cardContentStyles: SxProps<Theme> = {
+  flexGrow: 1,
+  overflow: 'auto',
 };
 
-export const typeChipStyles: SxProps<Theme> = {
-  // Стилі для чіпа Type
+export const cardActionsStyles: SxProps<Theme> = {
+  justifyContent: 'center',
+  padding: 2,
 };
 
 export const setupTextStyles: SxProps<Theme> = {

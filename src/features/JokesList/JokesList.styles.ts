@@ -9,7 +9,9 @@ export const jokeListContainerSx = {
 
 export const jokeCardItemSx = {
   display: 'flex',
-  width: '280px',
-  flexGrow: 1,
-  flexBasis: 'calc(33.333% - 16px)',
+  width: '300px',
+  height: '350px',
+  flexGrow: 0,
+  flexShrink: 0,
+  margin: 1,
 };

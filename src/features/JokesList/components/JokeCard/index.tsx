@@ -1,35 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Joke } from '../../../../types';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button'; // Імпортуємо Button
-import Stack from '@mui/material/Stack'; // Імпортуємо Stack для розташування кнопок
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
 import {
   cardStyles,
   cardHeaderStyles,
-  idChipStyles,
-  typeChipStyles,
   setupTextStyles,
   punchlineTextStyles,
+  cardContentStyles,
 } from './JokeCard.styles';
 
 interface JokeCardProps {
   joke: Joke;
-  onDelete: (id: number) => void; // Додаємо обробник видалення
-  onAdd: () => void; // Додаємо обробник додавання
-  onRefresh: (id: number) => void; // Додаємо обробник оновлення
+  onDelete: (id: number) => void;
+  onAdd: () => void;
+  onRefresh: (id: number) => void;
 }
 
 const JokeCard: React.FC<JokeCardProps> = ({ joke, onDelete, onAdd, onRefresh }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
-    <Card sx={cardStyles}>
-      <CardContent>
+    <Card
+      sx={cardStyles}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <CardContent sx={cardContentStyles}>
         <Box sx={cardHeaderStyles}>
-          <Chip label={`ID: ${joke.id}`} size="small" sx={idChipStyles} />
-          <Chip label={joke.type} size="small" color="primary" sx={typeChipStyles} />
+          <Chip label={`ID: ${joke.id}`} size="small" />
+          <Chip label={joke.type} size="small" color="primary" />
         </Box>
         <Typography variant="body1" sx={setupTextStyles} gutterBottom>
           {joke.setup}
@@ -38,30 +43,25 @@ const JokeCard: React.FC<JokeCardProps> = ({ joke, onDelete, onAdd, onRefresh })
           {joke.punchline}
         </Typography>
 
-        {/* Додаємо блок з кнопками */}
-        <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-          <Button
-            variant="outlined"
-            color="error"
-            size="small"
-            onClick={() => onDelete(joke.id)} // Викликаємо обробник видалення
-          >
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            mt: 2,
+            opacity: isHovered ? 1 : 0,
+            transition: 'opacity 0.3s ease',
+            visibility: isHovered ? 'visible' : 'hidden',
+            height: isHovered ? 'auto' : 0,
+            overflow: 'hidden',
+          }}
+        >
+          <Button variant="outlined" color="error" size="small" onClick={() => onDelete(joke.id)}>
             Delete
           </Button>
-          <Button
-            variant="outlined"
-            color="success"
-            size="small"
-            onClick={onAdd} // Викликаємо обробник додавання
-          >
+          <Button variant="outlined" color="success" size="small" onClick={onAdd}>
             Add
           </Button>
-          <Button
-            variant="outlined"
-            color="info"
-            size="small"
-            onClick={() => onRefresh(joke.id)} // Викликаємо обробник оновлення
-          >
+          <Button variant="outlined" color="info" size="small" onClick={() => onRefresh(joke.id)}>
             Refresh
           </Button>
         </Stack>
