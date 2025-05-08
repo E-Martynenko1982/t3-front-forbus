@@ -11,3 +11,9 @@ export enum RequestStatus {
   failed = 'failed',
   success = 'success',
 }
+
+export type JokeState = {
+  error: string | null;
+  data: Joke[];
+  requestStatus: RequestStatus;
+};
