@@ -2,23 +2,24 @@ import React, { useEffect, useCallback } from 'react';
 import JokeCard from './components/JokeCard';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import {
-  initialLoadJokes,
-  loadMoreJokes,
-  deleteJoke,
-  fetchRandomJoke,
   selectJokesData,
   selectRequestStatus,
   selectError,
-  addSingleJoke,
+  deleteJoke,
 } from '../../redux/jokeSlice';
+import {
+  initialLoadJokes,
+  loadMoreJokes,
+  addRandomJoke,
+  refreshJoke,
+} from '../../redux/jokeThunks';
 import { RequestStatus } from '../../types';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-
+import LoadMoreButton from './components/LoadMoreButton';
+import StatusDisplay from './components/StatusDisplay';
 import { jokeCardItemSx, jokeListContainerSx } from './JokesList.styles';
+import { Alert } from '@mui/material';
 
 const JokeList: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -27,7 +28,7 @@ const JokeList: React.FC = () => {
   const error = useAppSelector(selectError);
 
   useEffect(() => {
-    if (jokesData.length === 0 && requestStatus !== RequestStatus.loading) {
+    if (jokesData.length === 0 && requestStatus === RequestStatus.succeeded) {
       dispatch(initialLoadJokes());
     }
   }, [dispatch, jokesData.length, requestStatus]);
@@ -40,92 +41,66 @@ const JokeList: React.FC = () => {
   );
 
   const handleAdd = useCallback(async () => {
-    const result = await dispatch(fetchRandomJoke());
-    if (fetchRandomJoke.fulfilled.match(result) && result.payload) {
-      if (result.payload.id) {
-        dispatch(addSingleJoke(result.payload));
-      } else {
-        console.error('Received invalid joke format from API');
-      }
+    const resultAction = await dispatch(addRandomJoke());
+    if (addRandomJoke.rejected.match(resultAction)) {
+      console.error('Failed to add new joke (handled by slice):', resultAction.payload || resultAction.error.message);
     }
   }, [dispatch]);
 
   const handleRefresh = useCallback(
-    async (id: number) => {
-      dispatch(deleteJoke(id));
-      const result = await dispatch(fetchRandomJoke());
-      if (fetchRandomJoke.fulfilled.match(result)) {
-        dispatch(addSingleJoke(result.payload));
+    async (idToReplace: number) => {
+      const resultAction = await dispatch(refreshJoke(idToReplace));
+      if (refreshJoke.rejected.match(resultAction)) {
+        console.error(`Failed to refresh joke ${idToReplace} (handled by slice):`, resultAction.payload || resultAction.error.message);
       }
     },
     [dispatch],
   );
 
   const handleLoadMore = useCallback(() => {
-    dispatch(loadMoreJokes());
-  }, [dispatch]);
+    if (requestStatus !== RequestStatus.loading) {
+      dispatch(loadMoreJokes());
+    }
+  }, [dispatch, requestStatus]);
 
-  if (requestStatus === RequestStatus.loading && jokesData.length === 0) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <CircularProgress />
-        <Typography variant="h6" sx={{ ml: 2 }}>
-          Loading...
-        </Typography>
-      </Box>
-    );
-  }
+  const isInitialLoad = jokesData.length === 0 && (requestStatus === RequestStatus.loading || requestStatus === RequestStatus.succeeded);
 
-  if (requestStatus === RequestStatus.failed && jokesData.length === 0) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <Alert severity="error">Load error: {error}</Alert>
-      </Box>
-    );
-  }
-
-  if (jokesData.length === 0 && requestStatus !== RequestStatus.loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <Typography variant="h6">Jokes are not found</Typography>
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ ...jokeListContainerSx, textAlign: 'center' }}>
       <Typography variant="h4" gutterBottom>
         Jokes List
       </Typography>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
-        {jokesData.map(joke => (
-          <Box key={joke.id} sx={jokeCardItemSx}>
-            <JokeCard
-              joke={joke}
-              onDelete={handleDelete}
-              onAdd={handleAdd}
-              onRefresh={handleRefresh}
-            />
-          </Box>
-        ))}
-      </Box>
 
-      <Button
-        variant="contained"
-        size="large"
-        onClick={handleLoadMore}
-        disabled={requestStatus === RequestStatus.loading}
-        sx={{ mt: 4, mb: 4 }}
-      >
-        {requestStatus === RequestStatus.loading ? (
-          <CircularProgress size={24} color="inherit" />
-        ) : (
-          'Load More'
-        )}
-      </Button>
+      <StatusDisplay
+        requestStatus={requestStatus}
+        error={error}
+        jokesLength={jokesData.length}
+        isInitialLoad={isInitialLoad}
+      />
 
-      {error && requestStatus !== RequestStatus.failed && (
-        <Box sx={{ mt: 2, mb: 2 }}>
+      {jokesData.length > 0 && (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {jokesData.map(joke => (
+            <Box key={joke.id} sx={jokeCardItemSx}>
+              <JokeCard
+                joke={joke}
+                onDelete={handleDelete}
+                onAdd={handleAdd}
+                onRefresh={handleRefresh}
+              />
+            </Box>
+          ))}
+        </Box>
+      )}
+      {jokesData.length > 0 && requestStatus !== RequestStatus.failed && (
+        <LoadMoreButton
+          onClick={handleLoadMore}
+          isLoading={requestStatus === RequestStatus.loading && !isInitialLoad}
+        />
+      )}
+      {error && requestStatus !== RequestStatus.failed && requestStatus !== RequestStatus.loading && jokesData.length > 0 && !isInitialLoad && (
+        <Box sx={{ mt: 2, mb: 2, display: 'flex', justifyContent: 'center' }}>
           <Alert severity="warning">{error}</Alert>
         </Box>
       )}

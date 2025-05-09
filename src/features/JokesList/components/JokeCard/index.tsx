@@ -5,8 +5,7 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
+import JokeCardActions from '../JokeCardActions';
 import {
   cardStyles,
   cardHeaderStyles,
@@ -43,31 +42,16 @@ const JokeCard: React.FC<JokeCardProps> = ({ joke, onDelete, onAdd, onRefresh })
           {joke.punchline}
         </Typography>
 
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            mt: 2,
-            opacity: isHovered ? 1 : 0,
-            transition: 'opacity 0.3s ease',
-            visibility: isHovered ? 'visible' : 'hidden',
-            height: isHovered ? 'auto' : 0,
-            overflow: 'hidden',
-          }}
-        >
-          <Button variant="outlined" color="error" size="small" onClick={() => onDelete(joke.id)}>
-            Delete
-          </Button>
-          <Button variant="outlined" color="success" size="small" onClick={onAdd}>
-            Add
-          </Button>
-          <Button variant="outlined" color="info" size="small" onClick={() => onRefresh(joke.id)}>
-            Refresh
-          </Button>
-        </Stack>
+        <JokeCardActions
+          jokeId={joke.id}
+          isHovered={isHovered}
+          onDelete={onDelete}
+          onAdd={onAdd}
+          onRefresh={onRefresh}
+        />
       </CardContent>
     </Card>
   );
 };
 
-export default JokeCard;
+export default React.memo(JokeCard);
